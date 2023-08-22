@@ -14,6 +14,7 @@ from ..abcs.database_types import (
     ColType,
     UnknownColType,
     Boolean,
+    Date,
 )
 from ..abcs.mixins import AbstractMixin_MD5, AbstractMixin_NormalizeValue
 from .base import (
@@ -44,7 +45,7 @@ class Mixin_NormalizeValue(AbstractMixin_NormalizeValue):
         """Databricks timestamp contains no more than 6 digits in precision"""
 
         if coltype.rounds:
-            timestamp = f"cast(round(unix_micros({value}) / 1000000, {coltype.precision}) * 1000000 as bigint)"
+            timestamp = f"cast(round(unix_micros(cast({value} as timestamp)) / 1000000, {coltype.precision}) * 1000000 as bigint)"
             return f"date_format(timestamp_micros({timestamp}), 'yyyy-MM-dd HH:mm:ss.SSSSSS')"
 
         precision_format = "S" * coltype.precision + "0" * (6 - coltype.precision)
@@ -74,6 +75,7 @@ class Dialect(BaseDialect):
         "DECIMAL": Decimal,
         # Timestamps
         "TIMESTAMP": Timestamp,
+        "DATE": Date,
         # Text
         "STRING": Text,
         # Boolean
